@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 # Copyright 2011 OpenStack LLC.
 # All Rights Reserved.
@@ -16,11 +15,13 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-""" Starts the Tempo API Server"""
 
-import optparse
 import os
 import sys
+
+import nose
+import nose.config
+import nose.core
 
 possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
                                    os.pardir,
@@ -28,18 +29,10 @@ possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
 if os.path.exists(os.path.join(possible_topdir, 'tempo', '__init__.py')):
     sys.path.insert(0, possible_topdir)
 
-import tempo.api
-
-
-def parse_opts():
-    parser = optparse.OptionParser()
-    parser.add_option('-p', '--port', dest='port',
-                      help='The port to run the API server on', default=8080)
-    parser.add_option('--debug', dest='debug', action='store_true',
-                      help='Enable debug mode', default=False)
-    options, args = parser.parse_args()
-    return options, args
-
 if __name__ == '__main__':
-    opts, args = parse_opts()
-    tempo.api.start(*args, **opts.__dict__)
+    test_path = os.path.abspath(os.path.join('tests'))
+    c = nose.config.Config(stream=sys.stdout,
+                      env=os.environ,
+                      verbosity=3,
+                      workingDir=test_path)
+    nose.core.run(config=c, argv=sys.argv)
