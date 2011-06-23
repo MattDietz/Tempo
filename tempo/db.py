@@ -15,14 +15,22 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+
+class NotFoundException(Exception):
+    pass
+
+
 def task_get_all():
     return []
+
 
 def task_get(id):
     return {}
 
+
 def task_create_or_update(id, values):
     return values
+
 
 def task_delete(id):
     return None

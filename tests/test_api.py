@@ -23,6 +23,7 @@ import stubout
 from tempo import api
 from tempo import db
 
+
 class APITest(unittest.TestCase):
     def setUp(self):
         self.app = api.app.test_client()
@@ -43,7 +44,7 @@ class APITest(unittest.TestCase):
 
     def test_index_with_items(self):
         def stubbed_index():
-            elements = [1,2,3,4,5]
+            elements = [1, 2, 3, 4, 5]
             return elements
 
         self.stubs.Set(db, 'task_get_all', stubbed_index)
@@ -64,6 +65,7 @@ class APITest(unittest.TestCase):
 
     def test_create_item(self):
         self.called = False
+
         def stubbed_create(id, values):
             self.called = True
             return values
@@ -74,13 +76,14 @@ class APITest(unittest.TestCase):
 
     def test_create_item(self):
         self.called = False
+
         def stubbed_create(id, values):
             self.called = True
             return values
 
         self.stubs.Set(db, 'task_create_or_update', stubbed_create)
         body = {'task': 'backup', 'instance_uuid': 'abcdef',
-                'recurrence': '0 0 0 0 0' }
+                'recurrence': '0 0 0 0 0'}
         res = self.app.post('/%s/1' % api.resources_name,
                             content_type='application/json',
                             data=json.dumps(body))
@@ -89,13 +92,14 @@ class APITest(unittest.TestCase):
 
     def test_create_item_with_put(self):
         self.called = False
+
         def stubbed_create(id, values):
             self.called = True
             return values
 
         self.stubs.Set(db, 'task_create_or_update', stubbed_create)
         body = {'task': 'backup', 'instance_uuid': 'abcdef',
-                'recurrence': '0 0 0 0 0' }
+                'recurrence': '0 0 0 0 0'}
         res = self.app.put('/%s/1' % api.resources_name,
                             content_type='application/json',
                             data=json.dumps(body))
@@ -104,6 +108,7 @@ class APITest(unittest.TestCase):
 
     def test_create_item_no_task_fails(self):
         self.called = False
+
         def stubbed_create(id, values):
             self.called = True
             return values
@@ -118,12 +123,13 @@ class APITest(unittest.TestCase):
 
     def test_create_item_no_uuid_fails(self):
         self.called = False
+
         def stubbed_create(id, values):
             self.called = True
             return values
 
         self.stubs.Set(db, 'task_create_or_update', stubbed_create)
-        body = {'task': 'backup', 'recurrence': '0 0 0 0 0' }
+        body = {'task': 'backup', 'recurrence': '0 0 0 0 0'}
         res = self.app.put('/%s/1' % api.resources_name,
                             content_type='application/json',
                             data=json.dumps(body))
@@ -132,6 +138,7 @@ class APITest(unittest.TestCase):
 
     def test_create_item_no_recurrence_fails(self):
         self.called = False
+
         def stubbed_create(id, values):
             self.called = True
             return values
@@ -143,3 +150,30 @@ class APITest(unittest.TestCase):
                             data=json.dumps(body))
         self.assertEqual(self.called, False)
         self.assertEqual(res.status_code, 412)
+
+    def test_delete_item(self):
+        self.called = False
+
+        def stubbed_delete(id):
+            self.called = True
+
+        self.stubs.Set(db, 'task_delete', stubbed_delete)
+        res = self.app.delete('/%s/1' % api.resources_name)
+        self.assertEqual(self.called, True)
+        self.assertEqual(res.status_code, 204)
+
+    def test_delete_item_not_exist_fails(self):
+        def stubbed_delete(id):
+            raise db.NotFoundException()
+
+        self.stubs.Set(db, 'task_delete', stubbed_delete)
+        res = self.app.delete('/%s/1' % api.resources_name)
+        self.assertEqual(res.status_code, 404)
+
+    def test_delete_item_random_breakage_fails(self):
+        def stubbed_delete(id):
+            raise Exception("KABOOM")
+
+        self.stubs.Set(db, 'task_delete', stubbed_delete)
+        res = self.app.delete('/%s/1' % api.resources_name)
+        self.assertEqual(res.status_code, 500)
