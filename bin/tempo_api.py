@@ -37,9 +37,22 @@ def parse_opts():
                       help='The port to run the API server on', default=8080)
     parser.add_option('--debug', dest='debug', action='store_true',
                       help='Enable debug mode', default=False)
+    parser.add_option('--daemonized', dest='daemonized', action='store_true',
+                      help='Run the API as an eventlet WSGI app',
+                      default=False)
     options, args = parser.parse_args()
     return options, args
 
 if __name__ == '__main__':
     opts, args = parse_opts()
-    tempo.api.start(*args, **opts.__dict__)
+    daemonized = opts.__dict__.pop('daemonized')
+    if daemonized:
+        # TODO(mdietz): there's a cleaner way to do this, but this works well
+        # as a way of backgrounding the server for now
+        import daemon
+        from eventlet import wsgi
+        import eventlet
+        with daemon.DaemonContext():
+            wsgi.server(eventlet.listen(('', opts.port)), tempo.api.app)
+    else:
+        tempo.api.start(*args, **opts.__dict__)
